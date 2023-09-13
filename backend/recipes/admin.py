@@ -5,6 +5,7 @@ from .models import Ingredient, Recipe, Tag
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'color')
+    prepopulated_fields = {'slug': ('name',)}
 
 
 class IngredientAdmin(admin.ModelAdmin):
