@@ -4,7 +4,6 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 
-
 User = get_user_model()
 
 
@@ -123,3 +122,12 @@ class RecipeIngredient(models.Model):
         )],
         verbose_name='Количество ингредиентов',
     )
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='recipe_ingredient_unique',
+            )
+        ]
+
