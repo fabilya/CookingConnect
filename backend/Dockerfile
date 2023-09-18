@@ -1,6 +1,7 @@
-FROM python:3.9
+FROM python:3.11.4-bullseye
 WORKDIR /app
 COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
+RUN apt-get update && apt-get upgrade -y && \
+    pip install --upgrade pip && pip install -r requirements.txt
 COPY . .
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram.wsgi:application"]
+CMD gunicorn foodgram.wsgi:application --bind 0.0.0.0:8000
