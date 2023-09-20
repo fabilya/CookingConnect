@@ -5,11 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'django-insecure-&5gilcckhg!9jvdc_u5d8@px&jic-x$aqvlgk9e3cywdckpz0j'
 
-DEBUG = os.getenv('DEBUG', False)
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -120,3 +121,5 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'api.pagination.LimitPageNumberPagination',
     'PAGE_SIZE': 6,
 }
+
+CSRF_TRUSTED_ORIGINS = ["http://158.160.16.192"]
