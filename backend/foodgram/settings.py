@@ -10,6 +10,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='secret')
 
 DEBUG = os.getenv('DEBUG', default='True')
 
+CSRF_TRUSTED_ORIGINS = ["https://foodgramfabilya.bounceme.net"]
+
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS', default='localhost').split(', ')
 
