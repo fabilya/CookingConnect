@@ -95,7 +95,6 @@ class AddDeleteFavoriteRecipe(
         GetObjectMixin,
         generics.RetrieveDestroyAPIView,
         generics.ListCreateAPIView):
-    """Добавление и удаление рецепта в/из избранных."""
 
     def create(self, request, *args, **kwargs):
         instance = self.get_object()
