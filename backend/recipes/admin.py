@@ -62,6 +62,7 @@ class IngredientAdmin(admin.ModelAdmin):
         'id', 'name', 'measurement_unit',)
     search_fields = (
         'name', 'measurement_unit',)
+    list_filter = ('name',)
     empty_value_display = EMPTY_MSG
 
 
