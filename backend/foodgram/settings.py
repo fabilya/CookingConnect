@@ -13,8 +13,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS=["https://foodgramfabilya.bounceme.net"]
-
 AUTH_USER_MODEL = 'users.User'
 
 INSTALLED_APPS = [
