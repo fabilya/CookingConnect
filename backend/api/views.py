@@ -56,7 +56,6 @@ class PermissionAndPaginationMixin:
 class AddAndDeleteSubscribe(
         generics.RetrieveDestroyAPIView,
         generics.ListCreateAPIView):
-    """Подписка и отписка от пользователя."""
 
     serializer_class = SubscribeSerializer
 
