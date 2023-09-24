@@ -196,7 +196,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         ).select_related('author').prefetch_related(
             'tags', 'ingredients', 'recipe',
             'shopping_cart', 'favorite_recipe'
-        ) if self.request.user else Recipe.objects.annotate(
+        ) if self.request.user.is_authenticated else Recipe.objects.annotate(
             is_in_shopping_cart=Value(False),
             is_favorited=Value(False),
         ).select_related('author').prefetch_related(
@@ -209,7 +209,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=(IsAuthenticated,))
+        permission_classes=(AllowAny,))
     def download_shopping_cart(self, request):
 
         buffer = io.BytesIO()
