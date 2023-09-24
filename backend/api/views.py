@@ -138,7 +138,7 @@ class AuthToken(ObtainAuthToken):
 class UsersViewSet(UserViewSet):
 
     serializer_class = UserListSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return User.objects.annotate(
@@ -161,7 +161,7 @@ class UsersViewSet(UserViewSet):
 
     @action(
         detail=False,
-        permission_classes=(IsAuthenticatedOrReadOnly,))
+        permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
 
         user = request.user
