@@ -138,7 +138,7 @@ class AuthToken(ObtainAuthToken):
 class UsersViewSet(UserViewSet):
 
     serializer_class = UserListSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         return User.objects.annotate(
@@ -147,8 +147,7 @@ class UsersViewSet(UserViewSet):
                     author=OuterRef('id'))
             )).prefetch_related(
                 'follower', 'following'
-        ) if self.request.user.is_authenticated else User.objects.annotate(
-            is_subscribed=Value(False))
+        )
 
     def get_serializer_class(self):
         if self.request.method.lower() == 'post':
@@ -209,7 +208,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=(AllowAny,))
+        permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
 
         buffer = io.BytesIO()
