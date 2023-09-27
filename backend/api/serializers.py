@@ -45,7 +45,7 @@ class TokenSerializer(serializers.Serializer):
 
 
 class GetIsSubscribedMixin:
-
+    """Миксин определения подписки пользователя на автора"""
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
         return (
@@ -98,9 +98,7 @@ class UserPasswordSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        password = make_password(
-            validated_data.get('new_password'))
-        user.password = password
+        user.set_password(validated_data.get('new_password'))
         user.save()
         return validated_data
 

@@ -6,14 +6,16 @@ from django.dispatch import receiver
 
 User = get_user_model()
 
+field_lenght = 200
 
 class Ingredient(models.Model):
     name = models.CharField(
         'Название ингредиента',
-        max_length=200)
+        max_length=field_lenght,
+        db_index=True)
     measurement_unit = models.CharField(
         'Единица измерения ингредиента',
-        max_length=200)
+        max_length=field_lenght)
 
     class Meta:
         ordering = ['name']
@@ -63,7 +65,7 @@ class Recipe(models.Model):
         null=True)
     text = models.TextField(
         'Описание рецепта')
-    cooking_time = models.BigIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления рецепта')
     ingredients = models.ManyToManyField(
         Ingredient,
