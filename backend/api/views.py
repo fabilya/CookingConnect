@@ -1,7 +1,4 @@
 import io
-
-from api.filters import IngredientFilter, RecipeFilter
-from api.permissions import IsAdminOrReadOnly
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db.models.aggregates import Count, Sum
@@ -9,8 +6,6 @@ from django.db.models.expressions import Exists, OuterRef, Value
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
-                            Subscribe, Tag)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -28,13 +23,17 @@ from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           SubscribeSerializer, TagSerializer, TokenSerializer,
                           UserCreateSerializer, UserListSerializer,
                           UserPasswordSerializer)
+from api.filters import IngredientFilter, RecipeFilter
+from api.permissions import IsAdminOrReadOnly
+from foodgram.settings import FILENAME
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
+                            Subscribe, Tag)
+
 
 User = get_user_model()
-FILENAME = 'shoppingcart.pdf'
 
 
 class GetObjectMixin:
-
     serializer_class = SubscribeRecipeSerializer
     permission_classes = (AllowAny,)
 
@@ -46,16 +45,14 @@ class GetObjectMixin:
 
 
 class PermissionAndPaginationMixin:
-
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = None
 
 
 class AddAndDeleteSubscribe(
-        generics.RetrieveDestroyAPIView,
-        generics.ListCreateAPIView,
-        generics.GenericAPIView):
-
+    generics.RetrieveDestroyAPIView,
+    generics.ListCreateAPIView,
+    generics.GenericAPIView):
     serializer_class = SubscribeSerializer
 
     def get_queryset(self):
@@ -86,9 +83,9 @@ class AddAndDeleteSubscribe(
 
 
 class AddDeleteFavoriteRecipe(
-        GetObjectMixin,
-        generics.RetrieveDestroyAPIView,
-        generics.ListCreateAPIView):
+    GetObjectMixin,
+    generics.RetrieveDestroyAPIView,
+    generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -101,9 +98,9 @@ class AddDeleteFavoriteRecipe(
 
 
 class AddDeleteShoppingCart(
-        GetObjectMixin,
-        generics.RetrieveDestroyAPIView,
-        generics.ListCreateAPIView):
+    GetObjectMixin,
+    generics.RetrieveDestroyAPIView,
+    generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -116,7 +113,6 @@ class AddDeleteShoppingCart(
 
 
 class AuthToken(ObtainAuthToken):
-
     serializer_class = TokenSerializer
     permission_classes = (AllowAny,)
 
@@ -131,7 +127,6 @@ class AuthToken(ObtainAuthToken):
 
 
 class UsersViewSet(UserViewSet):
-
     serializer_class = UserListSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -141,7 +136,7 @@ class UsersViewSet(UserViewSet):
                 self.request.user.follower.filter(
                     author=OuterRef('id'))
             )).prefetch_related(
-                'follower', 'following'
+            'follower', 'following'
         ) if self.request.user.is_authenticated else User.objects.annotate(
             is_subscribed=Value(False))
 
@@ -158,7 +153,6 @@ class UsersViewSet(UserViewSet):
         detail=False,
         permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
-
         user = request.user
         queryset = Subscribe.objects.filter(user=user)
         pages = self.paginate_queryset(queryset)
@@ -169,7 +163,6 @@ class UsersViewSet(UserViewSet):
 
 
 class RecipesViewSet(viewsets.ModelViewSet):
-
     queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -246,17 +239,15 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
 
 class TagsViewSet(
-        PermissionAndPaginationMixin,
-        viewsets.ModelViewSet):
-
+    PermissionAndPaginationMixin,
+    viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
 class IngredientsViewSet(
-        PermissionAndPaginationMixin,
-        viewsets.ModelViewSet):
-
+    PermissionAndPaginationMixin,
+    viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filterset_class = IngredientFilter
@@ -264,7 +255,6 @@ class IngredientsViewSet(
 
 @api_view(['post'])
 def set_password(request):
-
     serializer = UserPasswordSerializer(
         data=request.data,
         context={'request': request})

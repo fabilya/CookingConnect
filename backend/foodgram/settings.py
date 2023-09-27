@@ -16,6 +16,7 @@ ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS', default='localhost').split(', ')
 
 AUTH_USER_MODEL = 'users.User'
+FILENAME = 'shoppingcart.pdf'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
