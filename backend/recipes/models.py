@@ -8,6 +8,7 @@ User = get_user_model()
 
 field_lenght = 200
 
+
 class Ingredient(models.Model):
     name = models.CharField(
         'Название ингредиента',
