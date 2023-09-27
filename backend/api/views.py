@@ -29,7 +29,6 @@ from foodgram.settings import FILENAME
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
                             Subscribe, Tag)
 
-
 User = get_user_model()
 
 
@@ -49,10 +48,9 @@ class PermissionAndPaginationMixin:
     pagination_class = None
 
 
-class AddAndDeleteSubscribe(
-    generics.RetrieveDestroyAPIView,
-    generics.ListCreateAPIView,
-    generics.GenericAPIView):
+class AddAndDeleteSubscribe(generics.RetrieveDestroyAPIView,
+                            generics.ListCreateAPIView,
+                            generics.GenericAPIView):
     serializer_class = SubscribeSerializer
 
     def get_queryset(self):
@@ -82,10 +80,9 @@ class AddAndDeleteSubscribe(
         self.request.user.follower.filter(author=instance).delete()
 
 
-class AddDeleteFavoriteRecipe(
-    GetObjectMixin,
-    generics.RetrieveDestroyAPIView,
-    generics.ListCreateAPIView):
+class AddDeleteFavoriteRecipe(GetObjectMixin,
+                              generics.RetrieveDestroyAPIView,
+                              generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -97,10 +94,9 @@ class AddDeleteFavoriteRecipe(
         self.request.user.favorite_recipe.recipe.remove(instance)
 
 
-class AddDeleteShoppingCart(
-    GetObjectMixin,
-    generics.RetrieveDestroyAPIView,
-    generics.ListCreateAPIView):
+class AddDeleteShoppingCart(GetObjectMixin,
+                            generics.RetrieveDestroyAPIView,
+                            generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -238,16 +234,14 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return FileResponse(buffer, as_attachment=True, filename=FILENAME)
 
 
-class TagsViewSet(
-    PermissionAndPaginationMixin,
-    viewsets.ModelViewSet):
+class TagsViewSet(PermissionAndPaginationMixin,
+                  viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
 
 
-class IngredientsViewSet(
-    PermissionAndPaginationMixin,
-    viewsets.ModelViewSet):
+class IngredientsViewSet(PermissionAndPaginationMixin,
+                         viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filterset_class = IngredientFilter
