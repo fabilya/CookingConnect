@@ -321,6 +321,11 @@ class SubscribeSerializer(serializers.ModelSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count',)
 
+    def get_is_subscribed(self, obj):
+        return Subscribe.objects.filter(
+            user=obj.user, author=obj.author
+        ).exists()
+
     def get_recipes(self, obj):
         """Возвращает количество рецептов пользователя."""
 
