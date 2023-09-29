@@ -1,5 +1,4 @@
-*/Dockerfile
-*/dockerignore
-*/db.sqlite3
-*/dat
-!data
+venv
+.git
+.idea
+db.sqlite3
