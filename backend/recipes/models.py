@@ -6,17 +6,17 @@ from django.dispatch import receiver
 
 User = get_user_model()
 
-field_lenght = 200
+FIELD_LENGHT = 200
 
 
 class Ingredient(models.Model):
     name = models.CharField(
         'Название ингредиента',
-        max_length=field_lenght,
+        max_length=FIELD_LENGHT,
         db_index=True)
     measurement_unit = models.CharField(
         'Единица измерения ингредиента',
-        max_length=field_lenght)
+        max_length=FIELD_LENGHT)
 
     class Meta:
         ordering = ['name']

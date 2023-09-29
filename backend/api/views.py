@@ -1,6 +1,9 @@
 import io
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.core.handlers.wsgi import WSGIRequest
+from djoser.views import UserViewSet as DjoserUserViewSet
+from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.expressions import Exists, OuterRef, Value
 from django.http import FileResponse
@@ -15,9 +18,13 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
                                         IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+                                        IsAuthenticatedOrReadOnly,
+                                        DjangoModelPermissions)
 from rest_framework.response import Response
 
+from users.models import Subscriptions
+from .mixins import AddDelViewMixin
+from .pagination import LimitPageNumberPagination
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           RecipeWriteSerializer, SubscribeRecipeSerializer,
                           SubscribeSerializer, TagSerializer, TokenSerializer,
@@ -122,39 +129,36 @@ class AuthToken(ObtainAuthToken):
             status=status.HTTP_201_CREATED)
 
 
-class UsersViewSet(UserViewSet):
-    serializer_class = UserListSerializer
-    permission_classes = (IsAuthenticated,)
+class UserViewSet(DjoserUserViewSet, AddDelViewMixin):
+    pagination_class = LimitPageNumberPagination
+    permission_classes = (DjangoModelPermissions,)
+    add_serializer = SubscribeSerializer
+    link_model = Subscriptions
 
-    def get_queryset(self):
-        return User.objects.annotate(
-            is_subscribed=Exists(
-                self.request.user.follower.filter(
-                    author=OuterRef('id'))
-            )).prefetch_related(
-            'follower', 'following'
-        ) if self.request.user.is_authenticated else User.objects.annotate(
-            is_subscribed=Value(False))
+    @action(detail=True, permission_classes=(IsAuthenticated,))
+    def subscribe(self, request: WSGIRequest, id: int | str) -> Response:
+        """Создаёт/удалет связь между пользователями."""
 
-    def get_serializer_class(self):
-        if self.request.method.lower() == 'post':
-            return UserCreateSerializer
-        return UserListSerializer
+    @subscribe.mapping.post
+    def create_subscribe(
+            self, request: WSGIRequest, id: int | str
+    ) -> Response:
+        return self._create_relation(id)
 
-    def perform_create(self, serializer):
-        password = make_password(self.request.data['password'])
-        serializer.save(password=password)
+    @subscribe.mapping.delete
+    def delete_subscribe(
+            self, request: WSGIRequest, id: int | str
+    ) -> Response:
+        return self._delete_relation(Q(author__id=id))
 
     @action(
-        detail=False,
-        permission_classes=(IsAuthenticated,))
-    def subscriptions(self, request):
-        user = request.user
-        queryset = Subscribe.objects.filter(user=user)
-        pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(
-            pages, many=True,
-            context={'request': request})
+        methods=("get",), detail=False, permission_classes=(IsAuthenticated,)
+    )
+    def subscriptions(self, request: WSGIRequest) -> Response:
+        pages = self.paginate_queryset(
+            User.objects.filter(subscribers__user=self.request.user)
+        )
+        serializer = SubscribeSerializer(pages, many=True)
         return self.get_paginated_response(serializer.data)
 
 

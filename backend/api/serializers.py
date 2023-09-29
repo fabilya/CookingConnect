@@ -3,12 +3,22 @@ from django.contrib.auth import authenticate, get_user_model
 from django.shortcuts import get_object_or_404
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
+from rest_framework.serializers import ModelSerializer
 
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Subscribe, Tag
 
 
 User = get_user_model()
+
 ERR_MSG = 'Не удается войти в систему с предоставленными учетными данными.'
+
+
+class ShortRecipeSerializer(ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = "id", "name", "image", "cooking_time"
+        read_only_fields = ("__all__",)
 
 
 class TokenSerializer(serializers.Serializer):
@@ -69,7 +79,7 @@ class UserListSerializer(GetIsSubscribedMixin, serializers.ModelSerializer):
         model = User
         fields = (
             'email', 'id', 'username',
-            'first_name', 'last_name', 'is_subscribed')
+            'first_name', 'last_name', 'is_subscribed', 'password',)
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -299,44 +309,25 @@ class SubscribeRecipeSerializer(serializers.ModelSerializer):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
-    """Сериализатор подписок."""
-
-    id = serializers.IntegerField(
-        source='author.id')
-    email = serializers.EmailField(
-        source='author.email')
-    username = serializers.CharField(
-        source='author.username')
-    first_name = serializers.CharField(
-        source='author.first_name')
-    last_name = serializers.CharField(
-        source='author.last_name')
-    recipes = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes = ShortRecipeSerializer(many=True, read_only=True)
+    recipes_count = SerializerMethodField()
 
     class Meta:
-        model = Subscribe
+        model = User
         fields = (
-            'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_count',)
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "is_subscribed",
+            "recipes",
+            "recipes_count",
+        )
+        read_only_fields = ("__all__",)
 
-    def get_is_subscribed(self, obj):
-        return Subscribe.objects.filter(
-            user=obj.user, author=obj.author
-        ).exists()
+    def get_is_subscribed(*args) -> bool:
+        return True
 
-    def get_recipes(self, obj):
-        """Возвращает количество рецептов пользователя."""
-
-        request = self.context.get('request')
-        limit = request.GET.get('recipes_limit')
-        recipes = (
-            obj.author.recipe.all()[:int(limit)] if limit
-            else obj.author.recipe.all())
-        return SubscribeRecipeSerializer(
-            recipes,
-            many=True).data
-
-    def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj.author).count()
+    def get_recipes_count(self, obj: User) -> int:
+        return obj.recipes.count()

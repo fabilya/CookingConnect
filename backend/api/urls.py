@@ -3,16 +3,16 @@ from rest_framework.routers import DefaultRouter
 
 from api.views import (AddAndDeleteSubscribe, AddDeleteFavoriteRecipe,
                        AddDeleteShoppingCart, AuthToken, IngredientsViewSet,
-                       RecipesViewSet, TagsViewSet, UsersViewSet, set_password)
+                       RecipesViewSet, TagsViewSet, UserViewSet, set_password)
 
 
 app_name = 'api'
 
 router = DefaultRouter()
-router.register('users', UsersViewSet)
-router.register('tags', TagsViewSet)
-router.register('ingredients', IngredientsViewSet)
-router.register('recipes', RecipesViewSet)
+router.register('users', UserViewSet, 'users')
+router.register('tags', TagsViewSet, 'tags')
+router.register('ingredients', IngredientsViewSet, 'ingredients')
+router.register('recipes', RecipesViewSet, 'recipes')
 
 
 urlpatterns = [
