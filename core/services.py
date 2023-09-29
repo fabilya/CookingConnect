@@ -36,7 +36,6 @@ def create_shoping_list(user: "MyUser") -> str:
         f"Список покупок для:\n\n{user.first_name}\n"
         f"{dt.now().strftime(DATE_TIME_FORMAT)}\n"
     ]
-    Ingredient = apps.get_model("recipes", "Ingredient")
     ingredients = (
         Ingredient.objects.filter(recipe__recipe__in_carts__user=user)
         .values("name", measurement=F("measurement_unit"))
