@@ -20,7 +20,11 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import Q, QuerySet
 from django.http.response import HttpResponse
 from djoser.views import UserViewSet as DjoserUserViewSet
-from recipes.models import ShoppingCart, FavoriteRecipe, Ingredient, Recipe, Tag
+from recipes.models import (ShoppingCart,
+                            FavoriteRecipe,
+                            Ingredient,
+                            Recipe,
+                            Tag)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.routers import APIRootView
@@ -120,7 +124,6 @@ class RecipeViewSet(ModelViewSet, AddDelViewMixin):
         author: str = self.request.query_params.get(UrlQueries.AUTHOR.value)
         if author:
             queryset = queryset.filter(author=author)
-
 
         if self.request.user.is_anonymous:
             return queryset

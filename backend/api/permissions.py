@@ -31,7 +31,9 @@ class AuthorStaffOrReadOnly(BanPermission):
 
 class AdminOrReadOnly(BanPermission):
 
-    def has_object_permission(self, request: WSGIRequest, view: APIRootView) -> bool:
+    def has_object_permission(
+            self, request: WSGIRequest, view: APIRootView
+    ) -> bool:
         return (
             request.method in SAFE_METHODS
             or request.user.is_authenticated
