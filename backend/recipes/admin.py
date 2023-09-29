@@ -1,109 +1,143 @@
-from django.contrib import admin
+from django.contrib.admin import (
+    ModelAdmin,
+    TabularInline,
+    display,
+    register,
+    site,
+)
+from django.core.handlers.wsgi import WSGIRequest
+from django.utils.html import format_html
+from django.utils.safestring import SafeString, mark_safe
+from recipes.forms import TagForm
+from recipes.models import (
+    AmountIngredient,
+    Carts,
+    Favorites,
+    Ingredient,
+    Recipe,
+    Tag,
+)
 
-from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient,
-                     ShoppingCart, Subscribe, Tag)
+site.site_header = "Администрирование Foodgram"
 
-EMPTY_MSG = '-пусто-'
-
-
-class RecipeIngredientAdmin(admin.StackedInline):
-    model = RecipeIngredient
-    autocomplete_fields = ('ingredient',)
+EMPTY_VALUE_DISPLAY = "Значение не указано"
 
 
-@admin.register(Recipe)
-class RecipeAdmin(admin.ModelAdmin):
+class IngredientInline(TabularInline):
+    model = AmountIngredient
+    extra = 2
+
+
+@register(AmountIngredient)
+class LinksAdmin(ModelAdmin):
+    pass
+
+
+@register(Ingredient)
+class IngredientAdmin(ModelAdmin):
     list_display = (
-        'id', 'get_author', 'name', 'text',
-        'cooking_time', 'get_tags', 'get_ingredients',
-        'pub_date', 'get_favorite_count')
+        "name",
+        "measurement_unit",
+    )
+    search_fields = ("name",)
+    list_filter = ("name",)
+
+    save_on_top = True
+    empty_value_display = EMPTY_VALUE_DISPLAY
+
+
+@register(Recipe)
+class RecipeAdmin(ModelAdmin):
+    list_display = (
+        "name",
+        "author",
+        "get_image",
+        "count_favorites",
+    )
+    fields = (
+        (
+            "name",
+            "cooking_time",
+        ),
+        (
+            "author",
+            "tags",
+        ),
+        ("text",),
+        ("image",),
+    )
+    raw_id_fields = ("author",)
     search_fields = (
-        'name', 'cooking_time',
-        'author__email', 'ingredients__name')
-    list_filter = ('name', 'author', 'tags',)
-    inlines = (RecipeIngredientAdmin,)
-    empty_value_display = EMPTY_MSG
+        "name",
+        "author__username",
+        "tags__name",
+    )
+    list_filter = ("name", "author__username", "tags__name")
 
-    @admin.display(
-        description='Электронная почта автора')
-    def get_author(self, obj):
-        return obj.author.email
+    inlines = (IngredientInline,)
+    save_on_top = True
+    empty_value_display = EMPTY_VALUE_DISPLAY
 
-    @admin.display(description='Тэги')
-    def get_tags(self, obj):
-        list_ = [_.name for _ in obj.tags.all()]
-        return ', '.join(list_)
+    def get_image(self, obj: Recipe) -> SafeString:
+        return mark_safe(f'<img src={obj.image.url} width="80" hieght="30"')
 
-    @admin.display(description=' Ингредиенты ')
-    def get_ingredients(self, obj):
-        return '\n '.join([
-            f'{item["ingredient__name"]} - {item["amount"]}'
-            f' {item["ingredient__measurement_unit"]}.'
-            for item in obj.recipe.values(
-                'ingredient__name',
-                'amount', 'ingredient__measurement_unit')])
+    get_image.short_description = "Изображение"
 
-    @admin.display(description='В избранном')
-    def get_favorite_count(self, obj):
-        return obj.favorite_recipe.count()
+    def count_favorites(self, obj: Recipe) -> int:
+        return obj.in_favorites.count()
+
+    count_favorites.short_description = "В избранном"
 
 
-@admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+@register(Tag)
+class TagAdmin(ModelAdmin):
+    form = TagForm
     list_display = (
-        'id', 'name', 'color', 'slug',)
-    search_fields = ('name', 'slug',)
-    empty_value_display = EMPTY_MSG
+        "name",
+        "slug",
+        "color_code",
+    )
+    search_fields = ("name", "color")
+
+    save_on_top = True
+    empty_value_display = EMPTY_VALUE_DISPLAY
+
+    @display(description="Colored")
+    def color_code(self, obj: Tag):
+        return format_html(
+            '<span style="color: #{};">{}</span>', obj.color[1:], obj.color
+        )
+
+    color_code.short_description = "Цветовой код тэга"
 
 
-@admin.register(Ingredient)
-class IngredientAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'name', 'measurement_unit',)
-    search_fields = (
-        'name', 'measurement_unit',)
-    list_filter = ('name',)
-    empty_value_display = EMPTY_MSG
+@register(Favorites)
+class FavoriteAdmin(ModelAdmin):
+    list_display = ("user", "recipe", "date_added")
+    search_fields = ("user__username", "recipe__name")
+
+    def has_change_permission(
+        self, request: WSGIRequest, obj: Favorites | None = None
+    ) -> bool:
+        return False
+
+    def has_delete_permission(
+        self, request: WSGIRequest, obj: Favorites | None = None
+    ) -> bool:
+        return False
 
 
-@admin.register(Subscribe)
-class SubscribeAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'user', 'author', 'created',)
-    search_fields = (
-        'user__email', 'author__email',)
-    empty_value_display = EMPTY_MSG
+@register(Carts)
+class CardAdmin(ModelAdmin):
+    list_display = ("user", "recipe", "date_added")
+    search_fields = ("user__username", "recipe__name")
 
+    def has_change_permission(
+        self, request: WSGIRequest, obj: Carts | None = None
+    ) -> bool:
+        return False
 
-@admin.register(FavoriteRecipe)
-class FavoriteRecipeAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'user', 'get_recipe', 'get_count')
-    empty_value_display = EMPTY_MSG
-
-    @admin.display(
-        description='Рецепты')
-    def get_recipe(self, obj):
-        return [
-            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
-
-    @admin.display(
-        description='В избранных')
-    def get_count(self, obj):
-        return obj.recipe.count()
-
-
-@admin.register(ShoppingCart)
-class SoppingCartAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'user', 'get_recipe', 'get_count')
-    empty_value_display = EMPTY_MSG
-
-    @admin.display(description='Рецепты')
-    def get_recipe(self, obj):
-        return [
-            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
-
-    @admin.display(description='В избранных')
-    def get_count(self, obj):
-        return obj.recipe.count()
+    def has_delete_permission(
+        self, request: WSGIRequest, obj: Carts | None = None
+    ) -> bool:
+        return False

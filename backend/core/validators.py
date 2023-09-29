@@ -13,6 +13,30 @@ if TYPE_CHECKING:
 
 @deconstructible
 class OneOfTwoValidator:
+    """Проверяет введённую строку регулярными выражениями.
+
+    Проверяет, соответствует ли введённая строка двум регулярным выражениям.
+    Разрешенно не более, чем одно соответствие.
+    Если регулярны выражения не переданы при вызове, применяет выражения
+    по умолчанию. По умолчанию, во избежание коллизий,
+    строка может быть только из латинских или только из русских букв.
+
+    Attrs:
+        first_regex (str):
+            Первый вариант допустимого регулярного выражения для сравнения
+            со значением. По умолчанию - только русские буквы.
+        second_regex (str):
+            Второй вариант допустимого регулярного выражения для сравнения
+            со значением. По умолчанию - только латинские буквы.
+        field (str):
+            Название проверяемого поля.
+
+        Raises:
+            ValidationError:
+                Переданное значение содержит символы разрешённые обоими
+                регулярными выражениями.
+    """
+
     first_regex = "[^а-яёА-ЯЁ]+"
     second_regex = "[^a-zA-Z]+"
     field = "Переданное значение"
@@ -42,6 +66,22 @@ class OneOfTwoValidator:
 
 @deconstructible
 class MinLenValidator:
+    """Проверяет минимальную длину значения.
+
+    Attrs:
+        min_len (int):
+            Минимально разрешённая длина значения.
+            По умолчанию - `0`.
+        field (str):
+            Название проверямого поля.
+        message (str):
+            Сообщение, выводимое при передаче слишком короткого значения.
+
+    Raises:
+        ValidationError:
+            Переданное значение слишком короткое.
+    """
+
     min_len = 0
     field = "Переданное значение"
     message = "\n%s недостаточной длины.\n"
@@ -67,6 +107,19 @@ class MinLenValidator:
 
 
 def hex_color_validator(color: str) -> str:
+    """Проверяет - может ли значение быть шестнадцатеричным цветом.
+
+    Args:
+        color (str):
+            Значение переданное для проверки.
+
+    Raises:
+        ValidationError:
+            Переданное значение не корректной длины.
+        ValidationError:
+            Символы значения выходят за пределы 16-ричной системы.
+    """
+
     color = color.strip(" #")
     if len(color) not in (3, 6):
         raise ValidationError(
@@ -80,6 +133,15 @@ def hex_color_validator(color: str) -> str:
 
 
 def tags_exist_validator(tags_ids: list[int | str], Tag: "Tag") -> list["Tag"]:
+    """Проверяет наличие тэгов с указанными id.
+
+    Args:
+        tags_ids (list[int | str]): Список id.
+        Tag (Tag): Модель тэгов во избежании цикличного импорта.
+
+    Raises:
+        ValidationError: Тэга с одним из указанных id не существует.
+    """
     if not tags_ids:
         raise ValidationError("Не указаны тэги")
 
@@ -95,6 +157,24 @@ def ingredients_validator(
     ingredients: list[dict[str, str | int]],
     Ingredient: "Ingredient",
 ) -> dict[int, tuple["Ingredient", int]]:
+    """Проверяет список ингридиентов.
+
+    Если повторяется ингридиенты, то сохраняется последний, считаем,
+    что пользователь забыл, что уже указывал ингридиент и написал его опять.
+
+    Args:
+        ingredients (list[dict[str, str | int]]):
+            Список ингридиентов.
+            Example: [{'amount': '5', 'id': 2073},]
+        Ingredient (Ingredient):
+            Модель ингридиентов во избежании цикличного импорта.
+
+    Raises:
+        ValidationError: Ошибка в переданном списке ингридиентов.
+
+    Returns:
+        dict[int, tuple[Ingredient, int]]:
+    """
     if not ingredients:
         raise ValidationError("Не указаны ингридиенты")
 
