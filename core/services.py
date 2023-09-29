@@ -1,5 +1,3 @@
-"""Модуль вспомогательных функций.
-"""
 from datetime import datetime as dt
 from typing import TYPE_CHECKING
 from urllib.parse import unquote

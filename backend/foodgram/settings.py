@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+DATE_TIME_FORMAT = "%d/%m/%Y %H:%M"
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY', default='secret')
