@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import ForeignKey, Model, CASCADE, DateTimeField, \
-    UniqueConstraint, CheckConstraint
+from django.db.models import (ForeignKey, Model, CASCADE, DateTimeField,
+                              UniqueConstraint, CheckConstraint)
 
 
 class User(AbstractUser):
