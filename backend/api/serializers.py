@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Subscribe, Tag
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 
 
 User = get_user_model()

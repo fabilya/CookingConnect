@@ -1,6 +1,5 @@
 import io
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from django.core.handlers.wsgi import WSGIRequest
 from djoser.views import UserViewSet as DjoserUserViewSet
 from django.db.models import Q
@@ -8,7 +7,6 @@ from django.db.models.aggregates import Count, Sum
 from django.db.models.expressions import Exists, OuterRef, Value
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-from djoser.views import UserViewSet
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -28,13 +26,12 @@ from .pagination import LimitPageNumberPagination
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           RecipeWriteSerializer, SubscribeRecipeSerializer,
                           SubscribeSerializer, TagSerializer, TokenSerializer,
-                          UserCreateSerializer, UserListSerializer,
                           UserPasswordSerializer)
 from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAdminOrReadOnly
 from foodgram.settings import FILENAME
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
-                            Subscribe, Tag)
+                            Tag)
 
 User = get_user_model()
 
