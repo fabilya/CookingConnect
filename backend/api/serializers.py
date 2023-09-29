@@ -303,7 +303,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     recipes_count = SerializerMethodField()
 
     class Meta:
-        model = User
+        model = Subscribe
         fields = (
             "email",
             "id",
