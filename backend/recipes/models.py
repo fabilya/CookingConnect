@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.core import validators
 from django.db import models
+from django.db.models import (UniqueConstraint,
+                              CASCADE,
+                              DateTimeField,
+                              ForeignKey)
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -174,28 +178,34 @@ class FavoriteRecipe(models.Model):
 
 
 class ShoppingCart(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='shopping_cart',
-        null=True,
-        verbose_name='Пользователь')
-    recipe = models.ManyToManyField(
-        Recipe,
-        related_name='shopping_cart',
-        verbose_name='Покупка')
+    recipe = ForeignKey(
+        verbose_name="Рецепты в списке покупок",
+        related_name="in_carts",
+        to=Recipe,
+        on_delete=CASCADE,
+    )
+    user = ForeignKey(
+        verbose_name="Владелец списка",
+        related_name="carts",
+        to=User,
+        on_delete=CASCADE,
+    )
+    date_added = DateTimeField(
+        verbose_name="Дата добавления", auto_now_add=True, editable=False
+    )
 
     class Meta:
-        verbose_name = 'Покупка'
-        verbose_name_plural = 'Покупки'
-        ordering = ['-id']
+        verbose_name = "Рецепт в списке покупок"
+        verbose_name_plural = "Рецепты в списке покупок"
+        constraints = (
+            UniqueConstraint(
+                fields=(
+                    "recipe",
+                    "user",
+                ),
+                name="\n%(app_label)s_%(class)s recipe is cart alredy\n",
+            ),
+        )
 
-    def __str__(self):
-        list_ = [item['name'] for item in self.recipe.values('name')]
-        return f'Пользователь {self.user} добавил {list_} в покупки.'
-
-    @receiver(post_save, sender=User)
-    def create_shopping_cart(
-            sender, instance, created, **kwargs):
-        if created:
-            return ShoppingCart.objects.create(user=instance)
+    def __str__(self) -> str:
+        return f"{self.user} -> {self.recipe}"
