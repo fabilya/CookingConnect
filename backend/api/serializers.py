@@ -312,14 +312,13 @@ class SubscribeSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(
         source='author.last_name')
     recipes = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscribe
         fields = (
             'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_count',)
+            'recipes', 'recipes_count',)
 
     def get_recipes(self, obj):
         """Возвращает количество рецептов пользователя."""
