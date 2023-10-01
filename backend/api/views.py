@@ -51,13 +51,12 @@ class RecipeViewSet(
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    permission_classes = OwnerUserOrReadOnly
 
     def get_permissions(self):
 
         permissions_dict = {
             'create': [permissions.IsAuthenticated()],
-            'partial_update': [OwnerUserOrReadOnly],
+            'partial_update': [OwnerUserOrReadOnly()],
             'favorite': [permissions.IsAuthenticated()],
             'shopping_cart': [permissions.IsAuthenticated()],
             'download_shopping_cart': [permissions.IsAuthenticated()],
@@ -135,7 +134,7 @@ class RecipeViewSet(
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
-        ).annotate(cart_amount=Sum('ingredient__amount')).order_by()
+        ).annotate(cart_amount=Sum('amount'))
 
         today = datetime.today()
         shopping_list = (
