@@ -16,7 +16,8 @@ ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS', default='localhost').split(', ')
 
 AUTH_USER_MODEL = 'users.User'
-FILENAME = 'shoppingcart.pdf'
+
+DATE_TIME_FORMAT = "%d/%m/%Y %H:%M"
 
 INSTALLED_APPS = [
     'django.contrib.admin',
