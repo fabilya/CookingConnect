@@ -4,8 +4,7 @@ from django.shortcuts import get_object_or_404
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
-
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag, Subscribe
 
 User = get_user_model()
 ERR_MSG = 'Не удается войти в систему с предоставленными учетными данными.'
@@ -312,22 +311,23 @@ class SubscribeSerializer(serializers.ModelSerializer, GetIsSubscribedMixin):
     last_name = serializers.CharField(
         source='author.last_name')
     recipes = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
-    recipes_limit = serializers.SerializerMethodField()
+    is_subscribed = serializers.BooleanField(
+        read_only=True)
+    recipes_count = serializers.IntegerField(
+        read_only=True)
 
     class Meta:
-        model = User
+        model = Subscribe
         fields = (
             'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_limit',)
+            'is_subscribed', 'recipes', 'recipes_count',)
 
     def get_recipes(self, obj):
-        """Возвращает количество рецептов пользователя."""
-
-        recipes_limit = self.context.get('request').GET.get('recipes_limit')
+        request = self.context.get('request').query_params.get('recipes_limit')
+        limit = request.GET.get('recipes_limit')
         recipes = (
-            obj.recipes.all()[:int(recipes_limit)]
-            if recipes_limit else obj.recipes
-        )
-        serializer = serializers.ListSerializer(child=RecipeWriteSerializer())
-        return serializer.to_representation(recipes)
+            obj.author.recipe.all()[:int(limit)] if limit
+            else obj.author.recipe.all())
+        return SubscribeRecipeSerializer(
+            recipes,
+            many=True).data
