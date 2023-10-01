@@ -13,7 +13,7 @@ from rest_framework import generics, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action, api_view
-from rest_framework.permissions import (SAFE_METHODS, AllowAny,)
+from rest_framework.permissions import SAFE_METHODS, AllowAny
 from rest_framework.response import Response
 
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
@@ -22,7 +22,6 @@ from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           UserCreateSerializer, UserListSerializer,
                           UserPasswordSerializer)
 from api.filters import IngredientFilter, RecipeFilter
-from api.permissions import IsAdminOrReadOnly
 from foodgram.settings import FILENAME
 from recipes.models import (FavoriteRecipe, Ingredient, Recipe, ShoppingCart,
                             Subscribe, Tag)
