@@ -129,12 +129,12 @@ class RecipeViewSet(
         if not user.shoppingcart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        ingredients = (IngredientAmount.objects.filter(
-            recipe__shoppingcart__user=request.user
-        ).values(
-            'ingredients__name',
-            'ingredients__measurement_unit'
-        ).annotate(amount=Sum('recipe__amount')).order_by())
+        shopping_cart = (
+            request.user.shoppingcart.recipe.
+            values(
+                'ingredients__name',
+                'ingredients__measurement_unit'
+            ).annotate(amount=Sum('recipe__amount')).order_by())
 
         today = datetime.today()
         shopping_list = (
@@ -144,7 +144,7 @@ class RecipeViewSet(
             f'- {ingredient["ingredient__name"]} '
             f'({ingredient["ingredient__measurement_unit"]})'
             f' - {ingredient["cart_amount"]}'
-            for ingredient in ingredients
+            for ingredient in shopping_cart
         ])
         shopping_list += f'\n\nFoodgram ({today:%Y})'
 

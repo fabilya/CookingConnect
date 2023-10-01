@@ -4,7 +4,6 @@ from recipes.models import Ingredient, Recipe
 
 
 class IngredientFilter(filters.FilterSet):
-    """Filtering ingredients by name."""
 
     name = filters.CharFilter(
         field_name='name',
@@ -17,7 +16,6 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    """Filter by author, favorites, shopping list and tags."""
 
     tags = filters.AllValuesMultipleFilter(field_name='tags__slug')
     is_favorited = filters.BooleanFilter(method='filter_is_favorited')
