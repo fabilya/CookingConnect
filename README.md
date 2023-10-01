@@ -167,15 +167,11 @@ docker-compose exec backend python manage.py createsuperuser
 docker-compose exec backend python manage.py collectstatic --no-input
 ```
 
-Дополнительно можно наполнить DB ингредиентами и тэгами:
+Дополнительно можно наполнить DB ингредиентами:
 
-```bash
-docker-compose exec backend python manage.py load_tags
-```
-
-```bash
-docker-compose exec backend python manage.py load_ingrs
-```
+* Зайти под админом
+* Нажать ингредиенты
+* Import и выбрать файл
 
 На этом всё, продуктовый помощник запущен, можно наполнять его рецептами и делится с друзьями!
 
@@ -205,15 +201,6 @@ docker-compose exec backend python manage.py createsuperuser
 docker-compose exec backend python manage.py collectstatic --no-input
 ```
 
-Дополнительно можно наполнить DB ингредиентами и тэгами:
-
-```bash
-docker-compose exec backend python manage.py load_tags
-```
-
-```bash
-docker-compose exec backend python manage.py load_ingrs
-```
 
 ### Документация к API доступна после запуска
 
