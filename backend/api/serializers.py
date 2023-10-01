@@ -12,7 +12,7 @@ from users.serializers import UserListSerializer
 
 
 class TagSerializer(serializers.ModelSerializer):
-    """Tag serializer."""
+    """Сериализатор для тегов."""
 
     color = ColorFieldValidator()
 
@@ -22,7 +22,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    """Ingredient serializer"""
+    """Сериализатор для ингредиентов."""
 
     class Meta:
         model = Ingredient
@@ -30,7 +30,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
-    """Serializer for ingredient with quantity."""
+    """Сериализатор ингредиентов с указанием количества."""
 
     id = serializers.IntegerField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
@@ -44,7 +44,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
 
 class IngredientAmountAddSerializer(serializers.ModelSerializer):
-    """Serializer for adding ingredient quantities to a recipe."""
+    """Сериализатор для добавления количества ингредиентов в рецепт."""
 
     id = serializers.IntegerField(source='ingredient.id')
     amount = AmountIngredientFieldValidator()
@@ -55,7 +55,7 @@ class IngredientAmountAddSerializer(serializers.ModelSerializer):
 
 
 class RecipeListShortSerializer(serializers.ModelSerializer):
-    """Serializer to view a short recipe."""
+    """Сериализатор для просмотра краткого рецепта"""
 
     image = Base64ImageField(required=True)
 
@@ -65,7 +65,7 @@ class RecipeListShortSerializer(serializers.ModelSerializer):
 
 
 class RecipeListSerializer(serializers.ModelSerializer):
-    """Serializer for recipes."""
+    """Сериализатор для рецептов."""
 
     tags = TagSerializer(many=True, read_only=True)
     author = UserListSerializer(
@@ -107,7 +107,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating and updating recipes."""
+    """Сериализатор для создания и обновления рецептов."""
 
     ingredients = IngredientAmountAddSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(
@@ -201,7 +201,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.Serializer):
-    """Serializer to add and remove from favorite recipes."""
+    """Сериализатор для добавления и удаления избранных рецептов."""
 
     def validate(self, data):
         user = self.context.get('request').user
@@ -222,8 +222,7 @@ class FavoriteSerializer(serializers.Serializer):
 
 
 class ShoppingCartSerializer(serializers.Serializer):
-    """Serializer for adding and removing
-       prescriptions from the shopping cart."""
+    """Сериализатор для добавления и удаления рецептов из корзины."""
 
     def validate(self, data):
         user = self.context.get('request').user

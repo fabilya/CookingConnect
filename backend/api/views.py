@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from .filters import IngredientFilter, RecipeFilter
 from recipes.models import (Favorite, Ingredient, IngredientAmount,
                             Recipe, ShoppingCart, Tag)
+from .permissions import OwnerUserOrReadOnly
 
 from .serializers import (
     FavoriteSerializer,
@@ -23,7 +24,6 @@ from .serializers import (
 
 
 class TagViewSet(viewsets.ModelViewSet):
-    """Representation for tags."""
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -31,7 +31,6 @@ class TagViewSet(viewsets.ModelViewSet):
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
-    """Representation for ingredients."""
 
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -48,18 +47,16 @@ class RecipeViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Representation for recipes."""
 
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_permissions(self):
-        """Defining access for serializer action."""
 
         permissions_dict = {
             'create': [permissions.IsAuthenticated()],
-            'partial_update': [permissions.IsAuthenticated()],
+            'partial_update': [OwnerUserOrReadOnly],
             'favorite': [permissions.IsAuthenticated()],
             'shopping_cart': [permissions.IsAuthenticated()],
             'download_shopping_cart': [permissions.IsAuthenticated()],
@@ -71,7 +68,6 @@ class RecipeViewSet(
         )
 
     def get_serializer_class(self):
-        """Definition of a serializer action."""
 
         serializer_class_dict = {
             'create': RecipeCreateSerializer,
@@ -92,7 +88,6 @@ class RecipeViewSet(
 
     @action(['POST', 'DELETE'], detail=True)
     def favorite(self, request, pk=None):
-        """Adding and removing recipes from favorites."""
 
         if self.request.method == 'POST':
             serializer = self.get_serializer(
@@ -110,7 +105,6 @@ class RecipeViewSet(
 
     @action(['POST', 'DELETE'], detail=True)
     def shopping_cart(self, request, pk=None):
-        """Adding and removing recipes from the shopping cart."""
 
         if self.request.method == 'POST':
             serializer = self.get_serializer(
