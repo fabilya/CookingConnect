@@ -1,19 +1,16 @@
-from __future__ import annotations
+from datetime import datetime
 
-from django.core.handlers.wsgi import WSGIRequest
-from django.db.models import Q
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from core.services import create_shoping_list
 from .filters import IngredientFilter, RecipeFilter
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import (Favorite, Ingredient, IngredientAmount,
+                            Recipe, ShoppingCart, Tag)
 
 from .serializers import (
     FavoriteSerializer,
@@ -111,32 +108,54 @@ class RecipeViewSet(
             get_object_or_404(Favorite, user=user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, permission_classes=(IsAuthenticated,))
-    def shopping_cart(self, request: WSGIRequest, pk: int | str) -> Response:
-        """Добавляет/удалет рецепт в `список покупок`."""
-    @shopping_cart.mapping.post
-    def recipe_to_cart(self, request: WSGIRequest, pk: int | str) -> Response:
-        self.link_model = ShoppingCart
-        return self._create_relation(pk)
+    @action(['POST', 'DELETE'], detail=True)
+    def shopping_cart(self, request, pk=None):
+        """Adding and removing recipes from the shopping cart."""
 
-    @shopping_cart.mapping.delete
-    def remove_recipe_from_cart(
-        self, request: WSGIRequest, pk: int | str
-    ) -> Response:
-        self.link_model = ShoppingCart
-        return self._delete_relation(Q(recipe__id=pk))
+        if self.request.method == 'POST':
+            serializer = self.get_serializer(
+                data=request.data,
+                context={'request': request, 'recipe_id': pk},
+            )
+            serializer.is_valid(raise_exception=True)
+            response_data = serializer.save(id=pk)
+            return Response(data=response_data, status=status.HTTP_201_CREATED)
+        elif self.request.method == 'DELETE':
+            user = self.request.user
+            recipe = get_object_or_404(Recipe, pk=pk)
+            get_object_or_404(ShoppingCart, user=user, recipe=recipe).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(methods=("get",), detail=False)
-    def download_shopping_cart(self, request: WSGIRequest) -> Response:
+    @action(
+        detail=False,
+        permission_classes=(permissions.IsAuthenticated,)
+    )
+    def download_shopping_cart(self, request):
+        user = request.user
+        if not user.shoppingcart.exists():
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        user = self.request.user
-        if not user.carts.exists():
-            return Response(status=HTTP_400_BAD_REQUEST)
+        ingredients = IngredientAmount.objects.filter(
+            recipe__shoppingcart__user=request.user
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(cart_amount=Sum('amount'))
 
-        filename = f"{user.username}_shopping_list.pdf"
-        shopping_list = create_shoping_list(user)
-        response = HttpResponse(
-            shopping_list, content_type="text.pdf; charset=utf-8"
+        today = datetime.today()
+        shopping_list = (
+            f'Список покупок на {today:%Y-%m-%d}:\n\n'
         )
-        response["Content-Disposition"] = f"attachment; filename={filename}"
+        shopping_list += '\n'.join([
+            f'- {ingredient["ingredient__name"]} '
+            f'({ingredient["ingredient__measurement_unit"]})'
+            f' - {ingredient["cart_amount"]}'
+            for ingredient in ingredients
+        ])
+        shopping_list += f'\n\nFoodgram ({today:%Y})'
+
+        filename = f'{user.username}_shopping_list.txt'
+        response = HttpResponse(shopping_list, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
+
         return response

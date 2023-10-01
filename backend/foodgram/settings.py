@@ -17,8 +17,6 @@ ALLOWED_HOSTS = os.environ.get(
 
 AUTH_USER_MODEL = 'users.User'
 
-DATE_TIME_FORMAT = "%d/%m/%Y %H:%M"
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
