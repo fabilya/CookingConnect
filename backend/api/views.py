@@ -13,9 +13,7 @@ from rest_framework import generics, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action, api_view
-from rest_framework.permissions import (SAFE_METHODS, AllowAny,
-                                        IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (SAFE_METHODS, AllowAny,)
 from rest_framework.response import Response
 
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
