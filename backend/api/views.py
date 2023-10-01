@@ -56,7 +56,7 @@ class RecipeViewSet(
 
         permissions_dict = {
             'create': [permissions.IsAuthenticated()],
-            'partial_update': [OwnerUserOrReadOnly()],
+            'partial_update': [OwnerUserOrReadOnly],
             'favorite': [permissions.IsAuthenticated()],
             'shopping_cart': [permissions.IsAuthenticated()],
             'download_shopping_cart': [permissions.IsAuthenticated()],
