@@ -297,7 +297,7 @@ class SubscribeRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class SubscribeSerializer(serializers.ModelSerializer, GetIsSubscribedMixin):
+class SubscribeSerializer(serializers.ModelSerializer):
     """Сериализатор подписок."""
 
     id = serializers.IntegerField(
@@ -313,20 +313,20 @@ class SubscribeSerializer(serializers.ModelSerializer, GetIsSubscribedMixin):
     recipes = serializers.SerializerMethodField()
     is_subscribed = serializers.BooleanField(
         read_only=True)
-    recipes_count = serializers.IntegerField(
+    recipes_limit = serializers.IntegerField(
         read_only=True)
 
     class Meta:
         model = Subscribe
         fields = (
             'email', 'id', 'username', 'first_name', 'last_name',
-            'is_subscribed', 'recipes', 'recipes_count',)
+            'is_subscribed', 'recipes', 'recipes_limit',)
 
     def get_recipes(self, obj):
         request = self.context.get('request').query_params.get('recipes_limit')
-        limit = request.GET.get('recipes_limit')
+        recipes_limit = request.GET.get('recipes_limit')
         recipes = (
-            obj.author.recipe.all()[:int(limit)] if limit
+            obj.author.recipe.all()[:int(recipes_limit)] if recipes_limit
             else obj.author.recipe.all())
         return SubscribeRecipeSerializer(
             recipes,
