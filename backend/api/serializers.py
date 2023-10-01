@@ -125,7 +125,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'name',
             'text',
             'cooking_time',
+            'author',
         )
+        read_only_fields = ('author',)
 
     def validate(self, data):
         ingredients_data = data.get('ingredients')
