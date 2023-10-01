@@ -1,11 +1,15 @@
 from datetime import datetime as dt
+from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.db.models import F, Sum
 from foodgram.settings import DATE_TIME_FORMAT
 
-def create_shoping_list(user: "MyUser") -> str:
+if TYPE_CHECKING:
+    from users.models import User
 
+
+def create_shoping_list(user: "User") -> str:
     shopping_list = [
         f"Список покупок для:\n\n{user.first_name}\n"
         f"{dt.now().strftime(DATE_TIME_FORMAT)}\n"
