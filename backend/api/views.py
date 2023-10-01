@@ -50,6 +50,7 @@ class RecipeViewSet(
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    permission_classes = OwnerUserOrReadOnly
 
     def get_permissions(self):
 
@@ -60,7 +61,7 @@ class RecipeViewSet(
             'shopping_cart': [permissions.IsAuthenticated()],
             'download_shopping_cart': [permissions.IsAuthenticated()],
             'list': [permissions.AllowAny()],
-            'retrieve': [permissions.AllowAny()],
+            'retrieve': [OwnerUserOrReadOnly],
         }
         return permissions_dict.get(
             self.action, [permissions.IsAuthenticated()]
