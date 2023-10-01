@@ -44,7 +44,7 @@ class GetObjectMixin:
 
 
 class PermissionAndPaginationMixin:
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (AllowAny,)
     pagination_class = None
 
 
@@ -147,7 +147,7 @@ class UsersViewSet(UserViewSet):
 
     @action(
         detail=False,
-        permission_classes=(IsAuthenticated,))
+        permission_classes=(AllowAny,))
     def subscriptions(self, request):
         user = request.user
         queryset = Subscribe.objects.filter(user=user)
@@ -161,7 +161,7 @@ class UsersViewSet(UserViewSet):
 class RecipesViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (AllowAny,)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
@@ -193,7 +193,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=(IsAuthenticated,))
+        permission_classes=(AllowAny,))
     def download_shopping_cart(self, request):
 
         buffer = io.BytesIO()
