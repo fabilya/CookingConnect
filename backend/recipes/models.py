@@ -1,6 +1,8 @@
 from colorfield.fields import ColorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from users.models import User
 
@@ -219,33 +221,28 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
-    """Recipe model in a shopping cart."""
-
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
-        verbose_name='Пользователь',
         on_delete=models.CASCADE,
-        related_name='shoppingcart',
-    )
-    recipe = models.ForeignKey(
+        related_name='shopping_cart',
+        null=True,
+        verbose_name='Пользователь')
+    recipe = models.ManyToManyField(
         Recipe,
-        verbose_name='Рецепт',
-        on_delete=models.CASCADE,
-        related_name='shoppingcart',
-    )
+        related_name='shopping_cart',
+        verbose_name='Покупка')
 
     class Meta:
-        verbose_name = 'Корзина'
-        verbose_name_plural = 'Корзины'
-        constraints = (
-            models.UniqueConstraint(
-                fields=(
-                    'recipe',
-                    'user',
-                ),
-                name='shopping_cart_unique',
-            ),
-        )
+        verbose_name = 'Покупка'
+        verbose_name_plural = 'Покупки'
+        ordering = ['-id']
 
     def __str__(self):
-        return f'{self.user} добавил {self.recipe} в корзину'
+        list_ = [item['name'] for item in self.recipe.values('name')]
+        return f'Пользователь {self.user} добавил {list_} в покупки.'
+
+    @receiver(post_save, sender=User)
+    def create_shopping_cart(
+            sender, instance, created, **kwargs):
+        if created:
+            return ShoppingCart.objects.create(user=instance)
