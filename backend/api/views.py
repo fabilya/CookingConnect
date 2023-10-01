@@ -9,7 +9,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
-from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import (Favorite, Ingredient, IngredientAmount,
+                            Recipe, ShoppingCart, Tag)
 from .permissions import OwnerUserOrReadOnly
 
 from .serializers import (
@@ -61,7 +62,7 @@ class RecipeViewSet(
             'shopping_cart': [permissions.IsAuthenticated()],
             'download_shopping_cart': [permissions.IsAuthenticated()],
             'list': [permissions.AllowAny()],
-            'retrieve': [OwnerUserOrReadOnly],
+            'retrieve': [permissions.AllowAny()],
         }
         return permissions_dict.get(
             self.action, [permissions.IsAuthenticated()]
@@ -129,12 +130,12 @@ class RecipeViewSet(
         if not user.shoppingcart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        shopping_cart = (
-            request.user.shoppingcart.recipe.
-            values(
-                'ingredients__name',
-                'ingredients__measurement_unit'
-            ).annotate(amount=Sum('recipe__amount')).order_by())
+        ingredients = IngredientAmount.objects.filter(
+            recipe__shoppingcart__user=request.user
+        ).values(
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(cart_amount=Sum('ingredient__amount')).order_by()
 
         today = datetime.today()
         shopping_list = (
@@ -144,7 +145,7 @@ class RecipeViewSet(
             f'- {ingredient["ingredient__name"]} '
             f'({ingredient["ingredient__measurement_unit"]})'
             f' - {ingredient["cart_amount"]}'
-            for ingredient in shopping_cart
+            for ingredient in ingredients
         ])
         shopping_list += f'\n\nFoodgram ({today:%Y})'
 
