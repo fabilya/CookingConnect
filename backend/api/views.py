@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from .filters import IngredientFilter, RecipeFilter
 from recipes.models import (Favorite, Ingredient, IngredientAmount,
                             Recipe, ShoppingCart, Tag)
-from .permissions import OwnerUserOrReadOnly
+from .permissions import IsAuthorOrReadOnly
 
 from .serializers import (
     FavoriteSerializer,
@@ -56,7 +56,7 @@ class RecipeViewSet(
 
         permissions_dict = {
             'create': [permissions.IsAuthenticated()],
-            'partial_update': [OwnerUserOrReadOnly],
+            'partial_update': [IsAuthorOrReadOnly()],
             'favorite': [permissions.IsAuthenticated()],
             'shopping_cart': [permissions.IsAuthenticated()],
             'download_shopping_cart': [permissions.IsAuthenticated()],
@@ -134,7 +134,7 @@ class RecipeViewSet(
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'
-        ).annotate(cart_amount=Sum('amount'))
+        ).annotate(amount=Sum('amount'))
 
         today = datetime.today()
         shopping_list = (
@@ -143,7 +143,7 @@ class RecipeViewSet(
         shopping_list += '\n'.join([
             f'- {ingredient["ingredient__name"]} '
             f'({ingredient["ingredient__measurement_unit"]})'
-            f' - {ingredient["cart_amount"]}'
+            f' - {ingredient["amount"]}'
             for ingredient in ingredients
         ])
         shopping_list += f'\n\nFoodgram ({today:%Y})'
