@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
+from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag, Subscribe
 
 User = get_user_model()
 ERR_MSG = 'Не удается войти в систему с предоставленными учетными данными.'
@@ -220,10 +220,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                     f'Тега {tag_name} не существует!')
         return data
 
-
-
-
-
     def validate_cooking_time(self, cooking_time):
         """Проверяет валидность данных времени приготовления."""
 
@@ -341,7 +337,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         recipes_limit = request.query_params.get('recipes_limit')
 
         if recipes_limit:
-            recipes = recipes[: int(recipes_limit)]
+            recipes = recipes[:int(recipes_limit)]
         else:
             recipes = recipes.all()
         return SubscribeRecipeSerializer(
@@ -352,7 +348,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return author.recipes.count()
 
     class Meta:
-        model = User
+        model = Subscribe
         fields = (
             'email',
             'id',
