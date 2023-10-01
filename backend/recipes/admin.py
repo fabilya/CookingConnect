@@ -1,109 +1,177 @@
 from django.contrib import admin
+from import_export.admin import ImportExportModelAdmin
+from import_export.resources import ModelResource
 
-from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient,
-                     ShoppingCart, Subscribe, Tag)
-
-EMPTY_MSG = '-пусто-'
+from .models import (Favorite, Ingredient, IngredientAmount,
+                     Recipe, ShoppingCart, Tag)
 
 
-class RecipeIngredientAdmin(admin.StackedInline):
-    model = RecipeIngredient
-    autocomplete_fields = ('ingredient',)
+class RecipeResource(ModelResource):
+    """Recipe resource model"""
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'author',
+            'pub_date',
+        )
+
+
+class IngredientsInline(admin.TabularInline):
+    """Menu to manage the ingredients in a recipe."""
+
+    model = IngredientAmount
+    extra = 0
+    min_num = 1
 
 
 @admin.register(Recipe)
-class RecipeAdmin(admin.ModelAdmin):
+class RecipeAdmin(ImportExportModelAdmin):
+    """Registration of recipe model and import/export in admin panel."""
+
+    resource_class = (RecipeResource,)
+    inlines = (IngredientsInline,)
     list_display = (
-        'id', 'get_author', 'name', 'text',
-        'cooking_time', 'get_tags', 'get_ingredients',
-        'pub_date', 'get_favorite_count')
-    search_fields = (
-        'name', 'cooking_time',
-        'author__email', 'ingredients__name')
-    list_filter = ('name', 'author', 'tags',)
-    inlines = (RecipeIngredientAdmin,)
-    empty_value_display = EMPTY_MSG
+        'id',
+        'name',
+        'author',
+    )
+    list_filter = ('author', 'name', 'tags')
+    search_fields = ('name', 'author')
 
-    @admin.display(
-        description='Электронная почта автора')
-    def get_author(self, obj):
-        return obj.author.email
 
-    @admin.display(description='Тэги')
-    def get_tags(self, obj):
-        list_ = [_.name for _ in obj.tags.all()]
-        return ', '.join(list_)
+class TagResource(ModelResource):
+    """Tagging Resource Model."""
 
-    @admin.display(description=' Ингредиенты ')
-    def get_ingredients(self, obj):
-        return '\n '.join([
-            f'{item["ingredient__name"]} - {item["amount"]}'
-            f' {item["ingredient__measurement_unit"]}.'
-            for item in obj.recipe.values(
-                'ingredient__name',
-                'amount', 'ingredient__measurement_unit')])
-
-    @admin.display(description='В избранном')
-    def get_favorite_count(self, obj):
-        return obj.favorite_recipe.count()
+    class Meta:
+        model = Tag
+        fields = (
+            'id',
+            'name',
+            'color',
+            'slug',
+        )
 
 
 @admin.register(Tag)
-class TagAdmin(admin.ModelAdmin):
+class TagAdmin(ImportExportModelAdmin):
+    """Register tag model and import/export in admin panel."""
+
+    resource_class = (TagResource,)
     list_display = (
-        'id', 'name', 'color', 'slug',)
-    search_fields = ('name', 'slug',)
-    empty_value_display = EMPTY_MSG
+        'id',
+        'name',
+        'color',
+        'slug',
+    )
+    search_fields = ('name', 'color', 'slug')
+
+
+class IngredientResource(ModelResource):
+    """Ingredient resource model."""
+
+    class Meta:
+        model = Ingredient
+        fields = (
+            'id',
+            'name',
+            'measurement_unit',
+        )
 
 
 @admin.register(Ingredient)
-class IngredientAdmin(admin.ModelAdmin):
+class IngredientAdmin(ImportExportModelAdmin):
+    """Registration of ingredient model and import/export in admin panel."""
+
+    resource_classes = (IngredientResource,)
     list_display = (
-        'id', 'name', 'measurement_unit',)
-    search_fields = (
-        'name', 'measurement_unit',)
-    list_filter = ('name',)
-    empty_value_display = EMPTY_MSG
+        'id',
+        'name',
+        'measurement_unit',
+    )
 
 
-@admin.register(Subscribe)
-class SubscribeAdmin(admin.ModelAdmin):
+class IngredientAmountResource(ModelResource):
+    """A model of an ingredient in a recipe."""
+
+    class Meta:
+        model = IngredientAmount
+        fields = (
+            'id',
+            'recipe',
+            'ingredient',
+            'amount',
+        )
+
+
+@admin.register(IngredientAmount)
+class IngredientAmountAdmin(ImportExportModelAdmin):
+    """
+    Registration of the ingredient model in the recipe and
+    import/export in the admin panel.
+    """
+
+    resource_classes = (IngredientAmountResource,)
     list_display = (
-        'id', 'user', 'author', 'created',)
-    search_fields = (
-        'user__email', 'author__email',)
-    empty_value_display = EMPTY_MSG
+        'id',
+        'recipe',
+        'ingredient',
+        'amount',
+    )
+    search_fields = ('recipe', 'ingredient')
 
 
-@admin.register(FavoriteRecipe)
-class FavoriteRecipeAdmin(admin.ModelAdmin):
+class FavoriteResource(ModelResource):
+    """A resource model of selected prescription resources."""
+
+    class Meta:
+        model = Favorite
+        fields = (
+            'id',
+            'user',
+            'recipe',
+        )
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(ImportExportModelAdmin):
+    """
+    Registration of favorite recipes and import/export model in admin panel.
+    """
+
+    resource_classes = (FavoriteResource,)
     list_display = (
-        'id', 'user', 'get_recipe', 'get_count')
-    empty_value_display = EMPTY_MSG
+        'id',
+        'user',
+        'recipe',
+    )
+    search_fields = ('user', 'recipe')
 
-    @admin.display(
-        description='Рецепты')
-    def get_recipe(self, obj):
-        return [
-            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
 
-    @admin.display(
-        description='В избранных')
-    def get_count(self, obj):
-        return obj.recipe.count()
+class ShoppingCartResource(ModelResource):
+    """Prescription resource model in your shopping cart."""
+
+    class Meta:
+        model = ShoppingCart
+        fields = (
+            'id',
+            'user',
+            'recipe',
+        )
 
 
 @admin.register(ShoppingCart)
-class SoppingCartAdmin(admin.ModelAdmin):
+class ShoppingCartAdmin(ImportExportModelAdmin):
+    """
+    Registration of recipe model in cart and import/export in admin panel.
+    """
+
+    resource_classes = (ShoppingCartResource,)
     list_display = (
-        'id', 'user', 'get_recipe', 'get_count')
-    empty_value_display = EMPTY_MSG
-
-    @admin.display(description='Рецепты')
-    def get_recipe(self, obj):
-        return [
-            f'{item["name"]} ' for item in obj.recipe.values('name')[:5]]
-
-    @admin.display(description='В избранных')
-    def get_count(self, obj):
-        return obj.recipe.count()
+        'id',
+        'user',
+        'recipe',
+    )
+    search_fields = ('user', 'recipe')
