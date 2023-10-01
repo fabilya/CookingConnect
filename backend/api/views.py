@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 from django.core.handlers.wsgi import WSGIRequest
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
@@ -107,23 +111,20 @@ class RecipeViewSet(
             get_object_or_404(Favorite, user=user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(['POST', 'DELETE'], detail=True)
-    def shopping_cart(self, request, pk=None):
-        """Adding and removing recipes from the shopping cart."""
+    @action(detail=True, permission_classes=(IsAuthenticated,))
+    def shopping_cart(self, request: WSGIRequest, pk: int | str) -> Response:
+        """Добавляет/удалет рецепт в `список покупок`."""
+    @shopping_cart.mapping.post
+    def recipe_to_cart(self, request: WSGIRequest, pk: int | str) -> Response:
+        self.link_model = ShoppingCart
+        return self._create_relation(pk)
 
-        if self.request.method == 'POST':
-            serializer = self.get_serializer(
-                data=request.data,
-                context={'request': request, 'recipe_id': pk},
-            )
-            serializer.is_valid(raise_exception=True)
-            response_data = serializer.save(id=pk)
-            return Response(data=response_data, status=status.HTTP_201_CREATED)
-        elif self.request.method == 'DELETE':
-            user = self.request.user
-            recipe = get_object_or_404(Recipe, pk=pk)
-            get_object_or_404(ShoppingCart, user=user, recipe=recipe).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    @shopping_cart.mapping.delete
+    def remove_recipe_from_cart(
+        self, request: WSGIRequest, pk: int | str
+    ) -> Response:
+        self.link_model = ShoppingCart
+        return self._delete_relation(Q(recipe__id=pk))
 
     @action(methods=("get",), detail=False)
     def download_shopping_cart(self, request: WSGIRequest) -> Response:
