@@ -298,7 +298,7 @@ class SubscribeRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
+class SubscribeSerializer(serializers.ModelSerializer, GetIsSubscribedMixin):
     """Сериализатор подписок."""
 
     id = serializers.IntegerField(
@@ -316,7 +316,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     recipes_limit = serializers.SerializerMethodField()
 
     class Meta:
-        model = Subscribe
+        model = User
         fields = (
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_limit',)
@@ -324,11 +324,10 @@ class SubscribeSerializer(serializers.ModelSerializer):
     def get_recipes(self, obj):
         """Возвращает количество рецептов пользователя."""
 
-        request = self.context.get('request')
-        limit = request.GET.get('recipes_limit')
+        recipes_limit = self.context.get('request').GET.get('recipes_limit')
         recipes = (
-            obj.author.recipe.all()[:int(limit)] if limit
-            else obj.author.recipe.all())
-        return SubscribeRecipeSerializer(
-            recipes,
-            many=True).data
+            obj.recipes.all()[:int(recipes_limit)]
+            if recipes_limit else obj.recipes
+        )
+        serializer = serializers.ListSerializer(child=RecipeWriteSerializer())
+        return serializer.to_representation(recipes)
