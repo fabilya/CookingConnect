@@ -124,7 +124,7 @@ class AuthToken(ObtainAuthToken):
 
 class UsersViewSet(UserViewSet):
     serializer_class = UserListSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         return User.objects.annotate(
