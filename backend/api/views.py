@@ -1,16 +1,19 @@
-from datetime import datetime
+import io
 
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from foodgram.settings import FILENAME
 from .filters import IngredientFilter, RecipeFilter
-from recipes.models import (Favorite, Ingredient, IngredientAmount,
-                            Recipe, ShoppingCart, Tag)
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 
 from .serializers import (
     FavoriteSerializer,
@@ -131,31 +134,40 @@ class RecipeViewSet(
         permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        user = request.user
-        if not user.shoppingcart.exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        ingredients = IngredientAmount.objects.filter(
-            recipe__shoppingcart__user=request.user
-        ).values(
-            'ingredient__name',
-            'ingredient__measurement_unit'
-        ).annotate(cart_amount=Sum('amount'))
-
-        today = datetime.today()
-        shopping_list = (
-            f'Список покупок на {today:%Y-%m-%d}:\n\n'
-        )
-        shopping_list += '\n'.join([
-            f'- {ingredient["ingredient__name"]} '
-            f'({ingredient["ingredient__measurement_unit"]})'
-            f' - {ingredient["cart_amount"]}'
-            for ingredient in ingredients
-        ])
-        shopping_list += f'\n\nFoodgram ({today:%Y})'
-
-        filename = f'{user.username}_shopping_list.txt'
-        response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
-
-        return response
+        buffer = io.BytesIO()
+        page = canvas.Canvas(buffer)
+        pdfmetrics.registerFont(TTFont('DejaVuSans', 'DejaVuSans.ttf'))
+        x_position, y_position = 50, 800
+        shopping_cart = (
+            request.user.shopping_cart.recipe.
+            values(
+                'ingredients__name',
+                'ingredients__measurement_unit'
+            ).annotate(amount=Sum('recipe__amount')).order_by())
+        page.setFont('DejaVuSans', 14)
+        if shopping_cart:
+            indent = 20
+            page.drawString(x_position, y_position, 'Cписок покупок:')
+            for index, recipe in enumerate(shopping_cart, start=1):
+                page.drawString(
+                    x_position, y_position - indent,
+                    f'{index}. {recipe["ingredients__name"]} - '
+                    f'{recipe["amount"]} '
+                    f'{recipe["ingredients__measurement_unit"]}.')
+                y_position -= 15
+                if y_position <= 50:
+                    page.showPage()
+                    y_position = 800
+            page.save()
+            buffer.seek(0)
+            return FileResponse(
+                buffer, as_attachment=True, filename=FILENAME)
+        page.setFont('DejaVuSans', 24)
+        page.drawString(
+            x_position,
+            y_position,
+            'Cписок покупок пуст!')
+        page.save()
+        buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True, filename=FILENAME)
