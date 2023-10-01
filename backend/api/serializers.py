@@ -191,6 +191,18 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
         ingredients = data['ingredients']
         ingredient_list = []
+
+        cooking_time = data.get('cooking_time')
+        if int(cooking_time) <= 0:
+            raise serializers.ValidationError('Время готовки должно '
+                                              'быть больше нуля')
+
+        for ingredient_data in ingredients:
+            amount = ingredient_data.get('amount')
+            if int(amount) <= 0:
+                raise serializers.ValidationError('Вес ингредиентов должен '
+                                                  'быть больше нуля')
+
         for items in ingredients:
             ingredient = get_object_or_404(
                 Ingredient, id=items['id'])
@@ -207,6 +219,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f'Тега {tag_name} не существует!')
         return data
+
+
+
+
 
     def validate_cooking_time(self, cooking_time):
         """Проверяет валидность данных времени приготовления."""
