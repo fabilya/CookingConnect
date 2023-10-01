@@ -18,7 +18,6 @@ from rest_framework.permissions import (SAFE_METHODS, AllowAny,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
-from .pagination import LimitPageNumberPagination
 from .serializers import (IngredientSerializer, RecipeReadSerializer,
                           RecipeWriteSerializer, SubscribeRecipeSerializer,
                           SubscribeSerializer, TagSerializer, TokenSerializer,
@@ -124,10 +123,8 @@ class AuthToken(ObtainAuthToken):
 
 
 class UsersViewSet(UserViewSet):
-    serializer_class = SubscribeSerializer
-    pagination_class = LimitPageNumberPagination
+    serializer_class = UserListSerializer
     permission_classes = (IsAuthenticated,)
-    link_model = Subscribe
 
     def get_queryset(self):
         return User.objects.annotate(
@@ -149,13 +146,15 @@ class UsersViewSet(UserViewSet):
         serializer.save(password=password)
 
     @action(
-        methods=("get",), detail=False, permission_classes=(IsAuthenticated,)
-    )
+        detail=False,
+        permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
-        pages = self.paginate_queryset(
-            User.objects.filter(subscribers__user=self.request.user)
-        )
-        serializer = SubscribeSerializer(pages, many=True)
+        user = request.user
+        queryset = Subscribe.objects.filter(user=user)
+        pages = self.paginate_queryset(queryset)
+        serializer = SubscribeSerializer(
+            pages, many=True,
+            context={'request': request})
         return self.get_paginated_response(serializer.data)
 
 
