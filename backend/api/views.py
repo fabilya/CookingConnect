@@ -132,9 +132,9 @@ class RecipeViewSet(
         ingredients = (IngredientAmount.objects.filter(
             recipe__shoppingcart__user=request.user
         ).values(
-                'ingredients__name',
-                'ingredients__measurement_unit'
-                ).annotate(amount=Sum('recipe__amount')).order_by())
+            'ingredients__name',
+            'ingredients__measurement_unit'
+        ).annotate(amount=Sum('recipe__amount')).order_by())
 
         today = datetime.today()
         shopping_list = (
