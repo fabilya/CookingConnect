@@ -9,8 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
-from recipes.models import (Favorite, Ingredient, IngredientAmount,
-                            Recipe, ShoppingCart, Tag)
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import OwnerUserOrReadOnly
 
 from .serializers import (
