@@ -1,16 +1,13 @@
-from datetime import datetime
-
 from django.db.models import Sum
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
-from recipes.models import (Favorite, Ingredient, IngredientAmount,
-                            Recipe, ShoppingCart, Tag)
+from recipes.models import (Favorite, Ingredient, Recipe, ShoppingCart, Tag)
 from .permissions import IsAuthorOrAdminOrReadOnly
 
 from .serializers import (
@@ -21,6 +18,7 @@ from .serializers import (
     ShoppingCartSerializer,
     TagSerializer,
 )
+from .utils import queryset_to_csv
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -120,36 +118,20 @@ class RecipeViewSet(
             get_object_or_404(ShoppingCart, user=user, recipe=recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=False,
-        permission_classes=(permissions.IsAuthenticated,)
-    )
+    @action(detail=False,
+            methods=['GET'],
+            permission_classes=(permissions.IsAuthenticated,)
+            )
     def download_shopping_cart(self, request):
-        user = request.user
-        if not user.shoppingcart.exists():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        ingredients = IngredientAmount.objects.filter(
-            recipe__shoppingcart__user=request.user
-        ).values(
-            'ingredient__name',
-            'ingredient__measurement_unit'
-        ).annotate(cart_amount=Sum('amount'))
-
-        today = datetime.today()
-        shopping_list = (
-            f'Список покупок на {today:%Y-%m-%d}:\n\n'
+        ingredients = (
+            Recipe.ingredients.through.objects.filter(
+                recipe__shoppingcart__user=request.user)
+            .values('ingredient__name',
+                    'ingredient__measurement_unit')
+            .annotate(amount=Sum('amount'))
+            .order_by('ingredient__name')
         )
-        shopping_list += '\n'.join([
-            f'- {ingredient["ingredient__name"]} '
-            f'({ingredient["ingredient__measurement_unit"]})'
-            f' - {ingredient["cart_amount"]}'
-            for ingredient in ingredients
-        ])
-        shopping_list += f'\n\nFoodgram ({today:%Y})'
-
-        filename = f'{user.username}_shopping_list.txt'
-        response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
-
+        if not ingredients.exists():
+            raise ValidationError({'errors': 'Корзина пуста'})
+        response = queryset_to_csv(ingredients)
         return response
