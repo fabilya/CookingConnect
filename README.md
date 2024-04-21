@@ -24,7 +24,7 @@ The “Shopping List” service will allow the user to create a list of products
 
 <img alt="image" height="250" src="https://github.com/fabilya/RandoMovie/assets/105780672/77c0fd4c-fcfe-4668-a3e0-a8e6f6ad97b1" width="400"/>
 
-<img alt="image" height="250" src="https://github.com/fabilya/RandoMovie/assets/105780672/25845414-91c3-4140-8d48-b45313ab5231" width="450"/>
+<img alt="image" height="250" src="https://github.com/fabilya/RandoMovie/assets/105780672/25845414-91c3-4140-8d48-b45313ab5231" width="400"/>
 
 ### Technologies
 `Python` `Django` `Django Rest Framework` `Docker` `Gunicorn` `NGINX` `PostgreSQL` `Yandex Cloud` `Continuous Integration` `Continuous Deployment`
