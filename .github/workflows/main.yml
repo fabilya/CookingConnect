@@ -1,4 +1,4 @@
-name: foodgram workflow
+name: cookingconnect workflow
 
 on: [push]
 

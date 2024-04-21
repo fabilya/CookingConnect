@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from webcolors import hex_to_name
 
-from foodgram.settings import INGREDIENT_MIN, INGREDIENT_MAX
+from cookingconnect.settings import INGREDIENT_MAX, INGREDIENT_MIN
 
 
 def validate_colorfield(value):

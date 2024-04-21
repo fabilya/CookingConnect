@@ -116,7 +116,7 @@ touch .env
 
 ```python
 DB_ENGINE='django.db.backends.postgresql'
-POSTGRES_DB='foodgram' # Задаем имя для БД.
+POSTGRES_DB='cookingconnect' # Задаем имя для БД.
 POSTGRES_USER='foodgram_u' # Задаем пользователя для БД.
 POSTGRES_PASSWORD='foodgram_u_pass' # Задаем пароль для БД.
 DB_HOST='db'
@@ -152,13 +152,18 @@ docker-compose down -v
 Для доступа к контейнеру backend и сборки финальной части выполняем следующие команды:
 
 ```bash
-docker-compose exec backend python manage.py makemigrations
+docker-compose exec backend python manage.py makemigrations users
+docker-compose exec backend python manage.py makemigrations recipes
+
 ```
 
 ```bash
 docker-compose exec backend python manage.py migrate --noinput
 ```
-
+```bash
+docker compose exec backend python manage.py load_tags
+docker compose exec backend python manage.py load_ingrs
+```
 ```bash
 docker-compose exec backend python manage.py createsuperuser
 ```
