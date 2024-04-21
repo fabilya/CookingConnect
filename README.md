@@ -1,162 +1,96 @@
-## Описание проекта Foodgram
 
-«Продуктовый помощник»: приложение, на котором пользователи публикуют рецепты кулинарных изделий, подписываться на публикации других авторов и добавлять рецепты в свое избранное.
-Сервис «Список покупок» позволит пользователю создавать список продуктов, которые нужно купить для приготовления выбранных блюд согласно рецепта/ов.
+# CookingConnect
 
-## Запуск с использованием CI/CD и Docker
+<img alt="Снимок экрана 2024-04-21 180715" height="350" src="https://github.com/fabilya/RandoMovie/assets/105780672/327db0f3-af94-4078-8bcf-c87d28c37ef8" width="500"/>
+
+## Content:
+- [Description](#project-description)
+- [Capabilities](#service-capabilities)
+- [Technologies](#technologies)
+- [Deployment](#deploy-the-project-on-a-remote-server)
+- [Authors](#authors)
+
+### Project description
+“Food Assistant”: an application where users publish recipes for culinary products, you can subscribe to the publications of other authors and add recipes to your favorites.
+The “Shopping List” service will allow the user to create a list of products that need to be purchased to prepare the selected dishes according to the recipe/s.
+
+### Service capabilities
+- share your recipes
+- see recipes from other users
+- add recipes to favorites
+- quickly create a shopping list by adding a recipe to your cart
+- download a summary list of products
+- keep track of your friends and colleagues
+
+<img alt="image" height="250" src="https://github.com/fabilya/RandoMovie/assets/105780672/77c0fd4c-fcfe-4668-a3e0-a8e6f6ad97b1" width="400"/>
+
+<img alt="image" height="250" src="https://github.com/fabilya/RandoMovie/assets/105780672/25845414-91c3-4140-8d48-b45313ab5231" width="450"/>
+
+### Technologies
+`Python` `Django` `Django Rest Framework` `Docker` `Gunicorn` `NGINX` `PostgreSQL` `Yandex Cloud` `Continuous Integration` `Continuous Deployment`
+
+## Deploy the project on a remote server:
+- Clone the repository
+```Bash
+https://github.com/fabilya/cookingconnect.git
+```
+- Install Docker compose on the server:
+```bash
+sudo apt install curl                                     # install the utility for downloading files
+curl -fsSL https://get.docker.com -o get-docker.sh        # download installation script
+sh get-docker.sh                                          # run script
+sudo apt-get install docker-compose-plugin                # latest version of docker compose
+```
+- To work with GitHub Actions, you need to create environment variables in the repository in the Secrets > Actions section:
 
 ```bash
-# В Settings - Secrets and variables создаем переменный с вашими данными
-# Это необходимо для работы с CI/CD, DockerHub, GitHub
-ALLOWED_HOSTS
-DB_ENGINE
-DB_HOST
-DB_PORT
-HOST
-MY_LOGIN
-MY_PASS
-PASSPHRASE
-POSTGRES_DB
-POSTGRES_PASSWORD
-POSTGRES_USER
-SECRET_KEY
-SSH_KEY
-USER
+SECRET_KEY              # Django project secret key
+DOCKER_PASSWORD         # Docker Hub password
+DOCKER_USERNAME         # Docker Hub login
+HOST                    # public IP of the server
+USER                    # username on the server
+PASSPHRASE              # *if the ssh key is password protected
+SSH_KEY                 # private ssh key
+TELEGRAM_TO             # Telegram account ID for sending a message
+TELEGRAM_TOKEN          # token of the bot sending the message
+
+DB_ENGINE               # django.db.backends.postgresql
+POSTGRES_DB             # postgres
+POSTGRES_USER           # postgres
+POSTGRES_PASSWORD       # postgres
+DB_HOST                 # db
+DB_PORT                 # 5432 (default port)
 ```
 
-Устанавливаем на ВМ в облаке необходимые компоненты для работы:
-
-```bash
-sudo apt update && sudo apt upgrade -y && sudo apt install curl -y
-```
-
-```bash
-sudo curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh && sudo rm get-docker.sh
-```
-
-```bash
-sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-```
-
-```bash
-sudo chmod +x /usr/local/bin/docker-compose
-```
-
-```bash
-sudo systemctl start docker.service && sudo systemctl enable docker.service
-```
-
-Всё, что нам нужно, установлено, далее, создаем папку /infra в домашней директории /home/username/:
-
-```bash
-cd ~
-```
-
-```bash
-mkdir infra
-```
-
-Предварительно из папки /backend и /frontend загрузим актуальные данные на DockerHub (на вашем ПК)
-
+Everything we need is installed, then create the /infra folder in the home directory /home/username/:
+First, from the /backend and /frontend folders, upload the current data to DockerHub (on your PC)
 ```bash
 docker login -u fabilya
-```
-
-```bash
 cd backend
-```
-
-```bash
 docker build -t fabilya/foodgram_backend:latest .
-```
-
-```bash
 docker push fabilya/foodgram_backend:latest
 ```
-
-```bash
-cd ..
-```
-
-```bash
-cd frontend
-```
-
-Готовим фронт для приложения, это заготовка для отправки на DH (где themasterid ваш логин на DH):
+We are preparing the front for the application, this is a template for sending to DH (where fabilya is your login for DH):
 ```bash
 docker build -t fabilya/foodgram_frontend:latest .
-```
-
-Отправляем на DG:
-```bash
 docker push fabilya/foodgram_frontend:latest
 ```
-
-Перенести файлы docker-compose.yml и default.conf на сервер, из папки infra в текущем репозитории (на вашем ПК).
-
+Move the docker-compose.yml and default.conf files to the server, from the infra folder in the current repository (on your PC).
 ```bash
 cd infra
-```
-
-```bash
 scp docker-compose.yml username@server_ip:/home/username/
-```
-
-```bash
 scp default.conf username@server_ip:/home/username/
 ```
-
-Так же, создаем файл .env в директории infra на ВМ:
-
-```bash
-touch .env
-```
-
-Заполнить в настройках репозитория секреты .env, необходимы для работы postgres в docker
-
-```python
-DB_ENGINE='django.db.backends.postgresql'
-POSTGRES_DB='cookingconnect' # Задаем имя для БД.
-POSTGRES_USER='foodgram_u' # Задаем пользователя для БД.
-POSTGRES_PASSWORD='foodgram_u_pass' # Задаем пароль для БД.
-DB_HOST='db'
-DB_PORT='5432'
-SECRET_KEY='secret'  # Задаем секрет.
-ALLOWED_HOSTS='127.0.0.1, backend' # Вставляем свой IP сервера.
-DEBUG = False
-```
-
-На этом настройка закончена, далее в папке infra выполняем команду:
-
+This completes the setup, then in the infra folder we execute the command:
 ```bash
 docker-compose up -d --build
 ```
-
-Проект запустится на ВМ и будет доступен по указанному вами адресу либо IP. Завершение настройки на ВМ:
-
-В папке infra выполняем команду, что бы собрать контейнеры:
-
-Остановить: 
-
-```bash
-docker-compose stop
-```
-
-Удалить вместе с volumes:
-
-```bash
-# Все данные удалятся!
-docker-compose down -v
-``` 
-
-Для доступа к контейнеру backend и сборки финальной части выполняем следующие команды:
-
+The project will run on the VM and will be available at the address or IP you specified.
+To access the backend container and build the final part, run the following commands:
 ```bash
 docker-compose exec backend python manage.py makemigrations users
 docker-compose exec backend python manage.py makemigrations recipes
-
 ```
-
 ```bash
 docker-compose exec backend python manage.py migrate --noinput
 ```
@@ -167,50 +101,10 @@ docker compose exec backend python manage.py load_ingrs
 ```bash
 docker-compose exec backend python manage.py createsuperuser
 ```
-
 ```bash
 docker-compose exec backend python manage.py collectstatic --no-input
 ```
+The CookingConnect has been launched, you can fill it with recipes and share it with friends!
 
-Дополнительно можно наполнить DB ингредиентами:
-
-* Зайти под админом
-* Нажать ингредиенты
-* Import и выбрать файл
-
-На этом всё, продуктовый помощник запущен, можно наполнять его рецептами и делится с друзьями!
-
-### Запуск проекта в Docker на локальной машине.
-
-Для Linux ставим Docker как описано выше, для Windows устанавливаем актуальный Docker Desktop.
-
-В папке infra выполняем команду, что бы собрать контейнеры:
-
-```bash
-docker-compose up -d --build
-```
-
-Для формирования базы из миграций, финальной настройки и заполнении базы тегами и ингридиентами,
-а так же подтянуть статику, и создаем суперюзера:
-
-```bash
-docker-compose exec backend python manage.py makemigrations
-```
-
-```bashдоступа к контейнеру выполняем следующие команды
-```bash
-docker-compose exec backend python manage.py createsuperuser
-```
-
-```bash
-docker-compose exec backend python manage.py collectstatic --no-input
-```
-
-
-### Документация к API доступна после запуска
-
-```url
-http://127.0.0.1/api/docs/
-```
-
-Автор: Фабиянский Илья
+### Authors:
+[Fabiyanskiy Ilya](https://github.com/fabilya)
