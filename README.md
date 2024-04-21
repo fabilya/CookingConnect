@@ -1,7 +1,7 @@
 
 # CookingConnect
 
-<img alt="Снимок экрана 2024-04-21 180715" height="350" src="https://github.com/fabilya/RandoMovie/assets/105780672/327db0f3-af94-4078-8bcf-c87d28c37ef8" width="500"/>
+![Снимок экрана 2024-04-21 180715](https://github.com/fabilya/RandoMovie/assets/105780672/327db0f3-af94-4078-8bcf-c87d28c37ef8)
 
 ## Content:
 - [Description](#project-description)
